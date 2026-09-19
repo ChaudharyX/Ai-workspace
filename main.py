@@ -851,26 +851,6 @@ def command(query: Command):
 # DOWNLOAD EXCEL
 # =========================================================
 
-@app.get("/api/download/{filename}")
-def download(filename):
-
-    path = STORE / safe(filename)
-
-    if not path.exists():
-
-        raise HTTPException(
-            404,
-            "File not found"
-        )
-
-    return FileResponse
-        path,
-        filename=filename,
-        media_type=(
-            "application/"
-            "vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        )
                     elif action=="split_monthly":
         headers=[str(ws.cell(1,c).value or "").lower() for c in range(1,ws.max_column+1)]
         dc=next((i+1 for i,h in enumerate(headers) if "date" in h),None)
