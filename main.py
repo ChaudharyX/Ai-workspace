@@ -863,7 +863,7 @@ def download(filename):
             "File not found"
         )
 
-    return FileResponse(index_file, media_type="text/html")
+    return FileResponse
         path,
         filename=filename,
         media_type=(
