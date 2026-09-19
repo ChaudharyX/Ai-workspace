@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-python-multipart
-openpyxl
-pandas
-requests
-xlrd
-pypdf
