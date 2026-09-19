@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workspace</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#f6f8fc;color:#172033}
+.header{height:68px;background:#fff;border-bottom:1px solid #e7eaf0;display:flex;align-items:center;padding:0 28px;justify-content:space-between;position:sticky;top:0;z-index:10}
+.logo{font-size:21px;font-weight:750}.logo span{color:#5b5cf0}
+.top-actions{display:flex;gap:10px}.top-btn{border:1px solid #e1e5ed;background:#fff;padding:9px 14px;border-radius:9px;cursor:pointer}
+.layout{display:flex;min-height:calc(100vh - 68px)}
+.sidebar{position:fixed;left:-250px;top:68px;width:230px;height:calc(100vh - 68px);background:#fff;border-right:1px solid #e7eaf0;padding:22px 14px;z-index:30;transition:left .22s ease;box-shadow:8px 0 24px #17203318}
+.sidebar.open{left:0}
+.menu-toggle{width:42px;height:42px;border:1px solid #e1e5ed;background:#fff;border-radius:10px;display:flex;flex-direction:column;justify-content:center;gap:5px;align-items:center;cursor:pointer;margin-right:12px}
+.menu-toggle span{display:block;width:20px;height:2px;background:#172033;border-radius:2px}
+.header-left{display:flex;align-items:center}
+.sidebar-backdrop{display:none;position:fixed;inset:68px 0 0;background:#17203340;z-index:20}
+.sidebar-backdrop.show{display:block}
+.nav{padding:12px 14px;border-radius:10px;margin:5px 0;cursor:pointer;color:#566074}
+.nav.active{background:#eef0ff;color:#4c4de7;font-weight:650}
+.main{flex:1;padding:32px;max-width:1250px;margin:0 auto;width:100%}
+h1{margin:0 0 7px;font-size:30px}.sub{color:#697386;margin-bottom:28px}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(250px,1fr));gap:18px}
+.card{background:#fff;border:1px solid #e7eaf0;border-radius:17px;padding:24px;box-shadow:0 5px 20px #17203308;cursor:pointer;transition:.15s}
+.card:hover{transform:translateY(-2px);box-shadow:0 9px 25px #17203312}
+.icon{font-size:34px;margin-bottom:12px}.card h2{margin:0 0 8px}.card p{color:#697386;line-height:1.5;margin:0}
+.panel{display:none;background:#fff;border:1px solid #e7eaf0;border-radius:17px;padding:24px;margin-top:22px}
+.panel.show{display:block}
+.step{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.badge{padding:7px 11px;border-radius:20px;background:#f0f2f7;color:#687286;font-size:13px}
+.badge.active{background:#ececff;color:#4c4de7;font-weight:650}
+.upload-box{border:2px dashed #cfd5e1;border-radius:15px;padding:35px;text-align:center;background:#fafbfe}
+button,.select{border:0;border-radius:10px;padding:11px 16px;font-size:14px;cursor:pointer}
+.primary{background:#5657ed;color:white}.secondary{background:#eef0ff;color:#4c4de7}
+input[type=file]{margin:14px 0}
+.format-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.format{border:1px solid #dfe3eb;padding:17px;border-radius:12px;cursor:pointer;background:#fff}
+.format:hover,.format.selected{border-color:#5b5cf0;background:#f3f3ff}
+.format b{display:block;margin-bottom:5px}.format small{color:#70798a}
+.command{display:flex;gap:10px;margin-top:20px}.command input{flex:1;padding:13px 15px;border:1px solid #d8dde7;border-radius:10px;font-size:15px}
+.status{margin-top:15px;background:#f7f8fb;border-radius:10px;padding:13px;color:#596273;white-space:pre-wrap}
+ .spreadsheet-wrap{display:none;background:#fff;border:1px solid #cfd5df;border-radius:10px;overflow:hidden;margin-top:22px;box-shadow:0 5px 18px #17203312}
+.spreadsheet-wrap.show{display:block}
+.excel-window{background:#fff}
+.excel-titlebar{height:48px;background:#16834b;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 14px}
+.excel-title-left{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650}
+.excel-title-left .book-icon{font-size:22px}
+.excel-title-actions{display:flex;gap:8px;align-items:center}
+.excel-title-actions button{background:transparent;color:#fff;border:0;padding:6px 8px;border-radius:6px}
+.excel-title-actions button:hover{background:#ffffff22}
+.excel-tabs{height:38px;display:flex;align-items:center;gap:4px;padding:0 12px;border-bottom:1px solid #d7dce3;background:#fff;overflow:auto;white-space:nowrap}
+.excel-tab{padding:9px 13px;font-size:13px;color:#303743;cursor:pointer}
+.excel-tab.active{font-weight:700;color:#16834b;border-bottom:3px solid #16834b}
+.excel-ribbon{min-height:82px;border-bottom:1px solid #d7dce3;background:#f8f9fb;padding:8px 12px;display:flex;align-items:stretch;gap:14px;overflow:auto}
+.ribbon-group{display:flex;align-items:center;gap:7px;padding-right:14px;border-right:1px solid #d9dde4;white-space:nowrap}
+.ribbon-btn{min-width:34px;height:48px;border:0;background:transparent;border-radius:5px;font-size:12px;color:#303743;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.ribbon-btn:hover{background:#e9f4ee}
+.ribbon-btn .ri{font-size:20px;line-height:20px}
+.ribbon-select{height:34px;border:1px solid #cfd5df;border-radius:4px;background:#fff;padding:0 10px;min-width:92px}
+.formula-row{height:40px;display:flex;align-items:center;border-bottom:1px solid #cfd5df;background:#fff}
+.name-box{width:78px;height:30px;margin:0 7px;border:1px solid #cfd5df;border-radius:3px;padding:6px 9px;font-size:13px;background:#fff}
+.fx{font-weight:700;color:#16834b;padding:0 8px;font-size:16px}
+.formula-input{height:30px;flex:1;border:1px solid #cfd5df;border-radius:3px;margin-right:8px;padding:5px 9px;font-size:13px;outline:none}
+.sheet-grid-wrap{overflow:auto;max-height:58vh;background:#fff}
+.sheet-grid{border-collapse:collapse;table-layout:fixed;min-width:1700px}
+.sheet-grid th,.sheet-grid td{border:1px solid #dfe3e8;height:26px;padding:3px 7px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet-grid thead th{height:27px;background:#f3f5f7;color:#404753;font-weight:600;text-align:center;position:sticky;top:0;z-index:3}
+.sheet-grid thead th.corner{left:0;z-index:5;width:44px;position:sticky}
+.sheet-grid tbody th{width:44px;background:#f3f5f7;color:#555d68;font-weight:500;text-align:center;position:sticky;left:0;z-index:2}
+.sheet-grid td{background:#fff;min-width:92px}
+.sheet-grid td.selected{outline:2px solid #16834b;outline-offset:-2px;background:#f5fbf7}
+.sheet-grid td[contenteditable="true"]:focus{outline:2px solid #16834b;outline-offset:-2px;background:#fff}
+.sheet-bottom{height:38px;border-top:1px solid #cfd5df;background:#f7f8fa;display:flex;align-items:center;gap:8px;padding:0 10px}
+.sheet-arrow{border:0;background:transparent;font-size:18px;color:#68717e}
+.sheet-tab{background:#fff;border:1px solid #cfd5df;border-bottom:3px solid #16834b;border-radius:5px 5px 0 0;padding:8px 18px;font-size:12px;font-weight:650}
+.sheet-plus{border:0;background:transparent;font-size:20px;color:#16834b}
+.sheet-status{margin-left:auto;color:#697386;font-size:12px}
+
+@media(max-width:800px){.main{padding:20px}.cards{grid-template-columns:1fr}.format-grid{grid-template-columns:1fr 1fr}.top-actions{display:none}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-left">
+    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <div class="logo">AI <span>Workspace</span></div>
+  </div>
+  <div class="top-actions"><button class="top-btn">Templates</button><button class="top-btn">History</button></div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <div class="nav active">⌂ Dashboard</div>
+  <div class="nav" onclick="openModule('sheet')">📊 AI Sheet</div>
+  <div class="nav" onclick="openModule('accounting')">🧾 AI Accounting</div>
+  <div class="nav">🧩 My Templates</div>
+  <div class="nav">🕘 History</div>
+  <div class="nav">⚙ Settings</div>
+</aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+<main class="main">
+  <h1>Welcome to AI Workspace</h1>
+  <div class="sub">Upload, understand, edit and organize your files using AI.</div>
+
+  <div class="cards">
+    <div class="card" onclick="openModule('sheet')">
+      <div class="icon">📊</div><h2>AI Sheet</h2>
+      <p>Upload Excel, CSV, PDF or photo. Choose a format and let AI create and edit the actual spreadsheet.</p>
+    </div>
+    <div class="card" onclick="openModule('accounting')">
+      <div class="icon">🧾</div><h2>AI Accounting</h2>
+      <p>Upload invoices, bills and statements and use AI to extract, verify and organize accounting data.</p>
+    </div>
+  </div>
+
+  <section id="sheet" class="panel">
+    <div class="step">
+      <span class="badge active" id="s1">1 Upload</span>
+      <span class="badge" id="s2">2 Choose Format</span>
+      <span class="badge" id="s3">3 AI Command</span>
+      <span class="badge" id="s4">4 Actual Sheet</span>
+    </div>
+
+    <div id="uploadStep">
+      <h2>Upload your file</h2>
+      <div class="upload-box">
+        <div style="font-size:35px">📁</div>
+        <b>Drop your file here or choose a file</b><br>
+        <small>Excel, CSV, PDF, JPG, PNG</small><br>
+        <input id="fileInput" type="file" accept=".xlsx,.xls,.csv,.pdf,.jpg,.jpeg,.png">
+        <br><button class="primary" onclick="afterUpload()">Upload & Continue</button>
+      </div>
+    </div>
+
+    <div id="formatStep" style="display:none">
+      <h2>Choose Format</h2>
+      <p style="color:#697386">File uploaded successfully. Ab choose karo ki data kis format me banana hai.</p>
+      <div class="format-grid">
+        <div class="format" onclick="chooseFormat(this,'same')"><b>📄 Same Format</b><small>Uploaded Excel/template jaisa format</small></div>
+        <div class="format" onclick="chooseFormat(this,'general')"><b>📋 General Sheet</b><small>Clean rows & columns format</small></div>
+        <div class="format" onclick="chooseFormat(this,'template')"><b>🧩 Select Template</b><small>Saved/custom template use karo</small></div>
+        <div class="format" onclick="chooseFormat(this,'ai')"><b>✨ AI Format</b><small>AI data ke hisab se format banaye</small></div>
+      </div>
+      <div style="margin-top:18px"><button class="primary" onclick="continueFormat()">Continue to AI Command</button></div>
+    </div>
+
+    <div id="commandStep" style="display:none"></div>
+
+    <div id="spreadsheetView" class="spreadsheet-wrap">
+      <div class="excel-window">
+        <div class="excel-titlebar">
+          <div class="excel-title-left"><span class="book-icon">▣</span><span>Book1</span><small style="font-weight:400;opacity:.85">• Saved</small></div>
+          <div class="excel-title-actions">
+            <button onclick="alert('Saved')">↥</button>
+            <button onclick="alert('Share link ready')">Share</button>
+            <button onclick="saveSheet()">✓</button>
+          </div>
+        </div>
+
+        <div class="excel-tabs">
+          <div class="excel-tab active">Home</div>
+          <div class="excel-tab">Insert</div>
+          <div class="excel-tab">Draw</div>
+          <div class="excel-tab">Page Layout</div>
+          <div class="excel-tab">Formulas</div>
+          <div class="excel-tab">Data</div>
+          <div class="excel-tab">Review</div>
+          <div class="excel-tab">View</div>
+          <div class="excel-tab">Help</div>
+        </div>
+
+        <div class="excel-ribbon">
+          <div class="ribbon-group">
+            <button class="ribbon-btn" onclick="document.execCommand('copy')"><span class="ri">📋</span>Paste</button>
+            <button class="ribbon-btn"><span class="ri">✂</span>Cut</button>
+            <button class="ribbon-btn"><span class="ri">↶</span>Undo</button>
+            <button class="ribbon-btn"><span class="ri">↷</span>Redo</button>
+          </div>
+          <div class="ribbon-group">
+            <select class="ribbon-select"><option>Calibri</option><option>Arial</option><option>Inter</option></select>
+            <select class="ribbon-select" style="min-width:60px"><option>12</option><option>11</option><option>14</option><option>16</option></select>
+            <button class="ribbon-btn"><span class="ri"><b>B</b></span>Bold</button>
+            <button class="ribbon-btn"><span class="ri"><i>I</i></span>Italic</button>
+            <button class="ribbon-btn"><span class="ri">U</span>Underline</button>
+          </div>
+          <div class="ribbon-group">
+            <button class="ribbon-btn"><span class="ri">≡</span>Align</button>
+            <button class="ribbon-btn"><span class="ri">↕</span>Wrap</button>
+            <button class="ribbon-btn"><span class="ri">%</span>Number</button>
+            <button class="ribbon-btn"><span class="ri">🎨</span>Fill</button>
+          </div>
+          <div class="ribbon-group">
+            <button class="ribbon-btn"><span class="ri">▦</span>Format as Table</button>
+            <button class="ribbon-btn"><span class="ri">✨</span>AI Format</button>
+            <button class="ribbon-btn"><span class="ri">Σ</span>AutoSum</button>
+          </div>
+          <div class="ribbon-group">
+            <button class="ribbon-btn"><span class="ri">↕</span>Sort</button>
+            <button class="ribbon-btn"><span class="ri">⌕</span>Find</button>
+            <button class="ribbon-btn"><span class="ri">☑</span>Filter</button>
+          </div>
+        </div>
+
+        <div class="formula-row">
+          <input id="cellName" class="name-box" value="A1" readonly>
+          <span class="fx">fx</span>
+          <input id="formulaInput" class="formula-input" placeholder="Enter value or formula">
+        </div>
+
+        <div class="sheet-grid-wrap">
+          <table class="sheet-grid" id="sheetTable"></table>
+        </div>
+
+        <div class="sheet-bottom">
+          <button class="sheet-arrow">‹</button><button class="sheet-arrow">›</button>
+          <button class="sheet-plus" onclick="addSheet()">＋</button>
+          <div class="sheet-tab">Sheet1</div>
+          <button class="sheet-plus" onclick="addSheet()">＋</button>
+          <div class="sheet-status" id="sheetStatus">Ready</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="accounting" class="panel">
+    <h2>AI Accounting</h2>
+    <p style="color:#697386">Invoice/photo/PDF upload → AI extraction → verification → accounting entry. This module is ready for the same AI command workflow.</p>
+    <button class="secondary" onclick="alert('Accounting module selected. Upload and command workflow will use the same AI engine.')">Open Accounting</button>
+  </section>
+</main>
+</div>
+
+<script>
+let selectedFormat="";
+let selectedCell=null;
+
+function openModule(id){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('show'));
+  document.getElementById(id).classList.add('show');
+  toggleSidebar(false);
+  if(id==='sheet') window.scrollTo({top:document.getElementById(id).offsetTop-80,behavior:'smooth'});
+}
+
+function toggleSidebar(force){
+  const sidebar=document.querySelector('.sidebar');
+  const backdrop=document.getElementById('sidebarBackdrop');
+  const open=typeof force==='boolean'?force:!sidebar.classList.contains('open');
+  sidebar.classList.toggle('open',open);
+  backdrop.classList.toggle('show',open);
+}
+
+function afterUpload(){
+  const f=document.getElementById('fileInput').files[0];
+  if(!f){alert('Pehle file select karo.');return}
+  document.getElementById('uploadStep').style.display='none';
+  document.getElementById('formatStep').style.display='block';
+  document.getElementById('s1').classList.remove('active');
+  document.getElementById('s2').classList.add('active');
+}
+
+function chooseFormat(el,type){
+  document.querySelectorAll('.format').forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFormat=type;
+}
+
+function continueFormat(){
+  if(!selectedFormat){alert('Pehle format choose karo.');return}
+  document.getElementById('formatStep').style.display='none';
+  document.getElementById('spreadsheetView').classList.add('show');
+  document.getElementById('s2').classList.remove('active');
+  document.getElementById('s4').classList.add('active');
+  buildSpreadsheet();
+  document.getElementById('spreadsheetView').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function colName(n){
+  let s="";
+  while(n>0){let r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26)}
+  return s;
+}
+
+function buildSpreadsheet(){
+  const table=document.getElementById('sheetTable');
+  let h='<thead><tr><th class="corner"></th>';
+  for(let c=1;c<=26;c++) h+='<th>'+colName(c)+'</th>';
+  h+='</tr></thead><tbody>';
+  for(let r=1;r<=28;r++){
+    h+='<tr><th>'+r+'</th>';
+    for(let c=1;c<=26;c++){
+      h+='<td contenteditable="true" data-cell="'+colName(c)+r+'" onclick="selectCell(this)"></td>';
+    }
+    h+='</tr>';
+  }
+  h+='</tbody>';
+  table.innerHTML=h;
+  selectCell(table.querySelector('tbody td'));
+}
+
+function selectCell(cell){
+  if(!cell)return;
+  if(selectedCell) selectedCell.classList.remove('selected');
+  selectedCell=cell;
+  selectedCell.classList.add('selected');
+  document.getElementById('cellName').value=cell.dataset.cell;
+  document.getElementById('formulaInput').value=cell.textContent.trim();
+  document.getElementById('formulaInput').oninput=function(){
+    if(selectedCell) selectedCell.textContent=this.value;
+  };
+}
+
+function addRow(){
+  const tbody=document.querySelector('#sheetTable tbody');
+  const r=tbody.rows.length+1;
+  const row=tbody.insertRow();
+  row.insertCell().outerHTML='<th>'+r+'</th>';
+  for(let c=1;c<=26;c++){
+    const cell=row.insertCell();
+    cell.contentEditable='true';
+    cell.dataset.cell=colName(c)+r;
+    cell.onclick=function(){selectCell(this)};
+  }
+}
+
+function addColumn(){
+  const table=document.getElementById('sheetTable');
+  const number=table.tHead.rows[0].cells.length;
+  const head=table.tHead.rows[0].insertCell();
+  head.outerHTML='<th>'+colName(number)+'</th>';
+  Array.from(table.tBodies[0].rows).forEach((row,i)=>{
+    const cell=row.insertCell();
+    cell.contentEditable='true';
+    cell.dataset.cell=colName(number)+(i+1);
+    cell.onclick=function(){selectCell(this)};
+  });
+}
+
+function addSheet(){
+  document.getElementById('sheetStatus').textContent='New sheet created';
+}
+
+function saveSheet(){
+  document.getElementById('sheetStatus').textContent='Saved just now';
+}
+
+</script></script>
+</body>
+</html>
